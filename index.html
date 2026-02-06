@@ -546,6 +546,23 @@
       .section.on {
         display: block;
       }
+
+      .future-intro {
+        font-size: 13px;
+        color: var(--dim);
+        line-height: 1.6;
+      }
+      input[type="date"] {
+        color-scheme: dark;
+      }
+      input[type="text"] {
+        transition: border-color 0.2s;
+      }
+      input[type="text"]:hover,
+      input[type="text"]:focus {
+        border-color: var(--accent);
+        outline: none;
+      }
       footer {
         text-align: center;
         padding: 32px 0 12px;
@@ -566,13 +583,15 @@
         <div class="logo">☾ Gazers.art</div>
         <h1>Performance <em>Benchmark</em></h1>
         <p class="sub">
-          Test your device against real Gazers rendering — by Matt Kane
+          Test your device against real Gazers rendering — see your Gazer's
+          future
         </p>
       </header>
 
       <div class="tabs">
         <button class="tab on" data-t="single">Single Gazer</button>
         <button class="tab" data-t="multi">Multi-Gazer Stress</button>
+        <button class="tab" data-t="future">Share a Time</button>
         <button class="tab" data-t="info">System Info</button>
       </div>
 
@@ -938,6 +957,284 @@
               <div class="dr">
                 <span class="dl">Gazers / Resolution</span
                 ><span class="dv" id="m_gz">--</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ SHARE A TIME ═══════════ -->
+      <div class="section" id="sec-future">
+        <div class="g">
+          <div class="c g1">
+            <div class="cl">
+              <span class="d"></span> Share a Time in the Future
+            </div>
+            <p class="future-intro">
+              Gazers speed up over time — each New Moon makes the animation a
+              little faster. A Gazer viewed today looks different than one
+              viewed in 2050, 2080, or beyond.
+            </p>
+            <p class="future-intro" style="margin-top: 8px; color: var(--gold)">
+              Set a future date to preview what your Gazer will look like then.
+              Share this moment with someone you love — even when you might not
+              be around to show them yourself.
+            </p>
+
+            <div class="cr" style="margin: 18px 0 12px">
+              <div class="cg">
+                <label>Gazer # (0–999)</label
+                ><input type="number" id="fNum" value="0" min="0" max="999" />
+              </div>
+              <div class="cg">
+                <label>Future Date</label
+                ><input
+                  type="date"
+                  id="fDate"
+                  style="
+                    width: 100%;
+                    background: var(--panel);
+                    color: var(--text);
+                    border: 1px solid var(--border);
+                    padding: 8px 10px;
+                    border-radius: 6px;
+                    font-family: 'Outfit', sans-serif;
+                    font-size: 12px;
+                  "
+                />
+              </div>
+              <div class="cg">
+                <label>Resolution</label>
+                <select id="fRes">
+                  <option value="1024">1K (1024×1024)</option>
+                  <option value="2048" selected>2K (2048×2048)</option>
+                  <option value="4096">4K (4096×4096)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="cr" style="margin-bottom: 16px">
+              <div class="cg" style="flex: 2">
+                <label>Dedication (optional)</label
+                ><input
+                  type="text"
+                  id="fMsg"
+                  placeholder="To my daughter, on her 30th birthday…"
+                  style="
+                    width: 100%;
+                    background: var(--panel);
+                    color: var(--text);
+                    border: 1px solid var(--border);
+                    padding: 8px 10px;
+                    border-radius: 6px;
+                    font-family: 'Outfit', sans-serif;
+                    font-size: 12px;
+                  "
+                />
+              </div>
+              <div class="cg" style="flex: 0">
+                <label>&nbsp;</label
+                ><button class="btn bp" id="bFuture">
+                  Travel to this Date
+                </button>
+              </div>
+            </div>
+
+            <!-- Time info banner -->
+            <div
+              class="c"
+              id="fBanner"
+              style="
+                display: none;
+                text-align: center;
+                margin-bottom: 12px;
+                border-color: var(--gold);
+              "
+            >
+              <div
+                style="
+                  font-size: 11px;
+                  color: var(--muted);
+                  letter-spacing: 2px;
+                  text-transform: uppercase;
+                  font-family: 'JetBrains Mono', monospace;
+                "
+              >
+                Viewing from the future
+              </div>
+              <div
+                id="fDateShow"
+                style="
+                  font-size: 28px;
+                  font-weight: 700;
+                  color: var(--gold);
+                  margin: 6px 0;
+                "
+              ></div>
+              <div
+                id="fYearsShow"
+                style="font-size: 13px; color: var(--dim)"
+              ></div>
+              <div
+                id="fMsgShow"
+                style="
+                  font-size: 14px;
+                  color: var(--text);
+                  margin-top: 8px;
+                  font-style: italic;
+                  display: none;
+                "
+              ></div>
+              <div
+                id="fMoonsShow"
+                style="
+                  font-size: 11px;
+                  color: var(--muted);
+                  margin-top: 6px;
+                  font-family: 'JetBrains Mono', monospace;
+                "
+              ></div>
+            </div>
+
+            <!-- Gazer display -->
+            <div class="gazer-frame" id="fWrap" style="max-width: 580px">
+              <div class="ld" id="fLd">
+                <div class="sp"></div>
+                <span>Time-traveling Gazer #<span id="fLdN">0</span>…</span>
+              </div>
+              <iframe
+                id="fIframe"
+                sandbox="allow-scripts allow-same-origin"
+              ></iframe>
+              <div
+                class="ov"
+                style="top: 8px; left: 8px; font-size: 10px; color: var(--gold)"
+                id="fLabel"
+              >
+                Gazer #0
+              </div>
+              <div
+                class="ov"
+                style="top: 8px; right: 8px; font-size: 10px; color: var(--dim)"
+                id="fSt"
+              >
+                READY
+              </div>
+              <div
+                class="ov"
+                style="
+                  bottom: 8px;
+                  left: 8px;
+                  font-size: 9px;
+                  color: var(--muted);
+                "
+                id="fTimeLabel"
+              ></div>
+            </div>
+
+            <!-- Benchmark -->
+            <div class="pg" id="fPg">
+              <div class="pgb"><div class="pgf" id="fPgF"></div></div>
+              <div class="pgt" id="fPgT">--</div>
+            </div>
+            <div class="br">
+              <button class="btn bp" id="bFBench" disabled>
+                <svg
+                  width="13"
+                  height="13"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  viewBox="0 0 24 24"
+                >
+                  <polygon points="5,3 19,12 5,21" />
+                </svg>
+                Benchmark this Future
+              </button>
+            </div>
+
+            <!-- Results -->
+            <div class="c g1 res" id="fResB" style="display: none">
+              <div class="rr" id="fRR"></div>
+              <div
+                style="
+                  display: flex;
+                  justify-content: center;
+                  gap: 40px;
+                  margin: 12px 0;
+                "
+              >
+                <div>
+                  <div class="rf" id="fRF"></div>
+                  <div class="rl">Render Drop</div>
+                </div>
+                <div>
+                  <div
+                    class="rf"
+                    id="fRF2"
+                    style="font-size: 32px; opacity: 0.6"
+                  ></div>
+                  <div class="rl">Avg Drop</div>
+                </div>
+                <div>
+                  <div
+                    class="rf"
+                    id="fRF3"
+                    style="font-size: 32px; opacity: 0.6"
+                  ></div>
+                  <div class="rl">Drop Count</div>
+                </div>
+              </div>
+              <div class="rd" id="fRD"></div>
+            </div>
+            <div class="c" id="fCC" style="display: none; margin-top: 12px">
+              <div class="cl"><span class="d"></span> FPS Timeline</div>
+              <div class="fc" style="height: 120px">
+                <canvas id="fCv"></canvas>
+              </div>
+            </div>
+            <div class="c" id="fSC" style="display: none; margin-top: 12px">
+              <div class="cl"><span class="d"></span> Future Performance</div>
+              <div class="dr">
+                <span class="dl">Baseline FPS</span
+                ><span class="dv" id="f_base">--</span>
+              </div>
+              <div class="dr">
+                <span class="dl">Worst Drop</span
+                ><span class="dv" id="f_worst">--</span>
+              </div>
+              <div class="dr">
+                <span class="dl">Avg Drop FPS</span
+                ><span class="dv" id="f_avgdrop">--</span>
+              </div>
+              <div class="dr">
+                <span class="dl">Drop Count</span
+                ><span class="dv" id="f_dcount">--</span>
+              </div>
+              <div class="dr">
+                <span class="dl">Time in Drops</span
+                ><span class="dv" id="f_dtime">--</span>
+              </div>
+              <div class="dr">
+                <span class="dl">Gazer / Date / Resolution</span
+                ><span class="dv" id="f_gz">--</span>
+              </div>
+            </div>
+
+            <!-- Comparison -->
+            <div class="c" id="fComp" style="display: none; margin-top: 12px">
+              <div class="cl"><span class="d"></span> Then vs Now</div>
+              <div class="dr">
+                <span class="dl">New Moons since Origin</span
+                ><span class="dv" id="f_moons">--</span>
+              </div>
+              <div class="dr">
+                <span class="dl">Estimated speedup factor</span
+                ><span class="dv" id="f_speed">--</span>
+              </div>
+              <div class="dr">
+                <span class="dl">Your Gazer at this date</span
+                ><span class="dv" id="f_feel">--</span>
               </div>
             </div>
           </div>
@@ -1382,7 +1679,8 @@
         }
 
         // — Banner —
-        const banner = p === "s" ? $("sRes") : $("mResB");
+        const banner =
+          p === "s" ? $("sRes") : p === "m" ? $("mResB") : $("fResB");
         banner.style.display = "block";
         banner.className = "c g1 res " + cls;
         $(p + "RR").textContent = rating;
@@ -1446,11 +1744,16 @@
           set("s_p1", Math.round(a.p1) + " fps", col(a.p1));
           set("s_fc", String(fps.length));
           set("s_gz", `#${meta.gazerNum} @ ${rr}×${rr}`);
-        } else {
+        } else if (p === "m") {
           set("m_gz", `${meta.count} Gazers @ ${rr}×${rr}`);
+        } else if (p === "f") {
+          set(
+            "f_gz",
+            `#${meta.gazerNum} · ${meta.futureDate || "?"} · ${rr}×${rr}`,
+          );
         }
 
-        // — Recs —
+        // — Recs (single only) —
         if (p === "s") showRecs(a, meta.res);
       }
 
@@ -1698,6 +2001,308 @@
           g.appendChild(el);
         });
       }
+
+      // ═══════════════════════════════════════
+      //  SHARE A TIME IN THE FUTURE
+      // ═══════════════════════════════════════
+
+      // Set default date to 10 years from now
+      (function () {
+        const d = new Date();
+        d.setFullYear(d.getFullYear() + 10);
+        const df = $("fDate");
+        if (df) df.value = d.toISOString().split("T")[0];
+      })();
+
+      async function fetchWithFallback(url) {
+        // Strategy 1: direct fetch
+        try {
+          $("fSt").textContent = "FETCHING…";
+          $("fSt").style.color = "var(--gold)";
+          const r = await fetch(url);
+          if (r.ok) return await r.text();
+        } catch (e) {
+          /* CORS or network — try proxy */
+        }
+
+        // Strategy 2: allorigins proxy
+        try {
+          $("fSt").textContent = "PROXY 1…";
+          $("fSt").style.color = "var(--gold)";
+          const proxyUrl =
+            "https://api.allorigins.win/raw?url=" + encodeURIComponent(url);
+          const r = await fetch(proxyUrl);
+          if (r.ok) return await r.text();
+        } catch (e) {
+          /* proxy failed too */
+        }
+
+        // Strategy 3: corsproxy
+        try {
+          $("fSt").textContent = "PROXY 2…";
+          $("fSt").style.color = "var(--gold)";
+          const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(url);
+          const r = await fetch(proxyUrl);
+          if (r.ok) return await r.text();
+        } catch (e) {
+          /* all failed */
+        }
+
+        throw new Error(
+          "Could not fetch generator — CORS blocked and proxies unavailable.",
+        );
+      }
+
+      async function travelToFuture() {
+        const num = parseInt($("fNum").value) || 0;
+        const dateStr = $("fDate").value;
+        const res = parseInt($("fRes").value);
+        const msg = $("fMsg").value.trim();
+
+        if (!dateStr) {
+          alert("Please select a future date.");
+          return;
+        }
+
+        const futureDate = new Date(dateStr + "T12:00:00");
+        const now = new Date();
+        if (futureDate <= now) {
+          alert("Please pick a date in the future.");
+          return;
+        }
+
+        const tokenId = 215000000 + num;
+        const genUrl = `https://api.artblocks.io/generator/${tokenId}`;
+
+        // Show loading
+        $("fLd").classList.remove("off");
+        $("fLdN").textContent = num;
+        $("bFuture").disabled = true;
+        $("bFBench").disabled = true;
+        ["fResB", "fCC", "fSC", "fComp"].forEach((id) => {
+          const e = $(id);
+          if (e) e.style.display = "none";
+        });
+
+        try {
+          let html = await fetchWithFallback(genUrl);
+
+          // Calculate time offset
+          const offset = futureDate.getTime() - Date.now();
+
+          // Fix relative URLs so resources load correctly from blob context
+          const base = "https://api.artblocks.io/";
+          html = html.replace(
+            /(src|href)="(?!https?:\/\/|data:|blob:|\/\/)(\/?)([^"]*?)"/gi,
+            (m, attr, slash, path) => {
+              return `${attr}="${
+                slash ? "https://api.artblocks.io/" : base
+              }${path}"`;
+            },
+          );
+
+          // Inject Date override before the first <script> tag
+          const dateOverride = `
+<script>
+(function(){
+  var _Date = Date;
+  var _now = _Date.now;
+  var offset = ${offset};
+  function FakeDate() {
+    var a = arguments;
+    if (a.length === 0) return new _Date(_now.call(_Date) + offset);
+    switch(a.length) {
+      case 1: return new _Date(a[0]);
+      case 2: return new _Date(a[0], a[1]);
+      case 3: return new _Date(a[0], a[1], a[2]);
+      case 4: return new _Date(a[0], a[1], a[2], a[3]);
+      case 5: return new _Date(a[0], a[1], a[2], a[3], a[4]);
+      case 6: return new _Date(a[0], a[1], a[2], a[3], a[4], a[5]);
+      default: return new _Date(a[0], a[1], a[2], a[3], a[4], a[5], a[6]);
+    }
+  }
+  FakeDate.prototype = _Date.prototype;
+  FakeDate.now = function(){ return _now.call(_Date) + offset; };
+  FakeDate.parse = _Date.parse.bind(_Date);
+  FakeDate.UTC = _Date.UTC.bind(_Date);
+  Date = FakeDate;
+})();
+<\/script>`;
+
+          // Inject before the first <script> tag
+          html = html.replace(/<script/i, dateOverride + "\n<script");
+
+          // Also add a <base> tag for any remaining relative resources
+          if (!html.includes("<base")) {
+            html = html.replace(
+              /<head[^>]*>/i,
+              '$&\n<base href="https://api.artblocks.io/">',
+            );
+          }
+
+          // Create blob URL and load in iframe
+          const blob = new Blob([html], { type: "text/html" });
+          const blobUrl = URL.createObjectURL(blob);
+          const frame = $("fIframe");
+
+          // Set resolution
+          const wrap = $("fWrap");
+          const displayW = wrap.clientWidth || 580;
+          const scale = displayW / res;
+          frame.style.width = res + "px";
+          frame.style.height = res + "px";
+          frame.style.transform = `scale(${scale})`;
+          frame.style.transformOrigin = "top left";
+          frame.style.position = "absolute";
+          frame.style.top = "0";
+          frame.style.left = "0";
+
+          frame.onload = () => {
+            $("fLd").classList.add("off");
+            $("fSt").textContent = "TIME TRAVELING";
+            $("fSt").style.color = "var(--green)";
+            $("bFBench").disabled = false;
+          };
+          frame.src = blobUrl;
+
+          // Show info banner
+          const yearsFromNow = (
+            (futureDate - now) /
+            (365.25 * 24 * 60 * 60 * 1000)
+          ).toFixed(1);
+          const newMoons = Math.floor(
+            (futureDate - now) / (29.53 * 24 * 60 * 60 * 1000),
+          );
+          const opts = { year: "numeric", month: "long", day: "numeric" };
+          const prettyDate = futureDate.toLocaleDateString("en-US", opts);
+
+          $("fBanner").style.display = "";
+          $("fDateShow").textContent = prettyDate;
+          $("fYearsShow").textContent = `${yearsFromNow} years from now`;
+          $(
+            "fMoonsShow",
+          ).textContent = `~${newMoons} New Moons from today — each one speeds up your Gazer`;
+
+          if (msg) {
+            $("fMsgShow").textContent = `"${msg}"`;
+            $("fMsgShow").style.display = "";
+          } else {
+            $("fMsgShow").style.display = "none";
+          }
+
+          $("fLabel").textContent = `Gazer #${num}`;
+          $("fTimeLabel").textContent = `${prettyDate} · ${res}×${res}`;
+
+          // Store for benchmark
+          $("fIframe").dataset.futureDate = dateStr;
+          $("fIframe").dataset.gazerNum = num;
+          $("fIframe").dataset.res = res;
+          $("fIframe").dataset.newMoons = newMoons;
+          $("fIframe").dataset.yearsFromNow = yearsFromNow;
+        } catch (err) {
+          $("fLd").classList.add("off");
+          $("fSt").textContent = "ERROR";
+          $("fSt").style.color = "var(--red)";
+          alert(
+            "Could not time-travel this Gazer.\n\n" +
+              err.message +
+              "\n\nTips:\n• Download this HTML file and open it directly in Chrome\n• Make sure you have internet access\n• Try a different Gazer number",
+          );
+        }
+
+        $("bFuture").disabled = false;
+      }
+
+      $("bFuture").addEventListener("click", travelToFuture);
+
+      // Benchmark the future Gazer
+      async function benchFuture() {
+        $("bFBench").disabled = true;
+        ["fResB", "fCC", "fSC", "fComp"].forEach((id) => {
+          const e = $(id);
+          if (e) e.style.display = "none";
+        });
+
+        const frame = $("fIframe");
+        const num = frame.dataset.gazerNum || "0";
+        const res = parseInt(frame.dataset.res) || 2048;
+        const dateStr = frame.dataset.futureDate || "";
+        const newMoons = parseInt(frame.dataset.newMoons) || 0;
+        const yearsFromNow = frame.dataset.yearsFromNow || "?";
+
+        $("fPg").style.display = "block";
+        $("fSt").textContent = "WARMING UP";
+        $("fSt").style.color = "var(--gold)";
+        $("fPgT").textContent = "Warming up…";
+        $("fPgF").style.width = "5%";
+        await sleep(1500);
+
+        $("fSt").textContent = "BENCHMARKING";
+        hist = [];
+        benching = true;
+        const dur = 5000,
+          t0 = performance.now();
+        const anim = () => {
+          if (!benching) return;
+          const el = performance.now() - t0;
+          $("fPgF").style.width = Math.min(98, 5 + (el / dur) * 90) + "%";
+          $("fPgT").textContent = `${(el / 1000).toFixed(
+            1,
+          )}s / 5s — measuring future performance`;
+          if (el < dur) requestAnimationFrame(anim);
+        };
+        requestAnimationFrame(anim);
+        await sleep(dur);
+        benching = false;
+
+        $("fPgF").style.width = "100%";
+        $("fPgT").textContent = "Done";
+        await sleep(300);
+        $("fPg").style.display = "none";
+        $("fSt").textContent = "COMPLETE";
+        $("fSt").style.color = "var(--green)";
+
+        showResults("f", hist, {
+          secs: 5,
+          gazerNum: num,
+          res,
+          futureDate: dateStr,
+        });
+
+        // Show comparison card
+        $("fComp").style.display = "";
+        const set = (id, t, c) => {
+          const e = $(id);
+          if (!e) return;
+          e.textContent = t;
+          if (c) e.style.color = c;
+        };
+        set("f_moons", `~${newMoons} additional New Moons`, "var(--cyan)");
+
+        // Gazers frame rate scales roughly with number of new moons since origin
+        // Origin moons range from ~20 years ago to mint date (Dec 2021)
+        // A rough heuristic: each new moon adds a fractional fps speedup
+        const speedFactor = (1 + newMoons * 0.01).toFixed(2);
+        set("f_speed", `~${speedFactor}× current speed`, "var(--gold)");
+
+        if (newMoons > 500)
+          set("f_feel", "Fluid animation — alive and flowing", "var(--green)");
+        else if (newMoons > 200)
+          set(
+            "f_feel",
+            "Noticeably faster — a living painting",
+            "var(--green)",
+          );
+        else if (newMoons > 50)
+          set("f_feel", "Subtly quicker — evolving slowly", "var(--gold)");
+        else set("f_feel", "Almost the same as today", "var(--dim)");
+
+        set("f_gz", `#${num} · ${dateStr} · ${res}×${res}`);
+
+        $("bFBench").disabled = false;
+      }
+
+      $("bFBench").addEventListener("click", benchFuture);
 
       // ── Hardware ──
       function detectHW() {
