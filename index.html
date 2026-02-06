@@ -1,0 +1,1755 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gazers.art — Performance Benchmark</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Outfit:wght@300;400;600;700;800&display=swap");
+      :root {
+        --bg: #06060a;
+        --panel: #0c0d14;
+        --card: #111219;
+        --border: #1c1e30;
+        --border-hi: #282b48;
+        --text: #e2e2ec;
+        --dim: #6e7094;
+        --muted: #3e4062;
+        --accent: #5b4bd4;
+        --glow: #8b80f0;
+        --green: #22dd88;
+        --yellow: #f0c030;
+        --red: #ee4455;
+        --cyan: #30dde0;
+        --gold: #c9a84c;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Outfit", sans-serif;
+        min-height: 100vh;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(
+          ellipse at 50% 0%,
+          rgba(91, 75, 212, 0.04) 0%,
+          transparent 60%
+        );
+        pointer-events: none;
+      }
+      .wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 16px 16px 80px;
+        position: relative;
+        z-index: 1;
+      }
+
+      header {
+        text-align: center;
+        padding: 32px 0 24px;
+      }
+      .logo {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 8px;
+        text-transform: uppercase;
+        color: var(--gold);
+        margin-bottom: 8px;
+        opacity: 0;
+        animation: fu 0.6s ease forwards;
+      }
+      h1 {
+        font-size: clamp(24px, 4vw, 38px);
+        font-weight: 800;
+        color: #fff;
+        opacity: 0;
+        animation: fu 0.6s ease 0.1s forwards;
+      }
+      h1 em {
+        font-style: normal;
+        background: linear-gradient(135deg, var(--gold), var(--glow));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .sub {
+        font-size: 13px;
+        color: var(--dim);
+        margin-top: 4px;
+        font-weight: 300;
+        opacity: 0;
+        animation: fu 0.6s ease 0.15s forwards;
+      }
+      @keyframes fu {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .tabs {
+        display: flex;
+        gap: 4px;
+        background: var(--panel);
+        border-radius: 8px;
+        padding: 4px;
+        margin-top: 20px;
+        border: 1px solid var(--border);
+      }
+      .tab {
+        flex: 1;
+        padding: 10px;
+        text-align: center;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--dim);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        background: none;
+        font-family: "Outfit", sans-serif;
+      }
+      .tab.on {
+        background: var(--card);
+        color: var(--text);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      }
+      .tab:hover:not(.on) {
+        color: var(--text);
+      }
+
+      .g {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 16px;
+      }
+      .g1 {
+        grid-column: 1/-1;
+      }
+      @media (max-width: 768px) {
+        .g {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .c {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 18px;
+        transition: border-color 0.3s;
+      }
+      .c:hover {
+        border-color: var(--border-hi);
+      }
+      .cl {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 9px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .cl .d {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--gold);
+        box-shadow: 0 0 6px var(--gold);
+      }
+
+      .gazer-frame {
+        position: relative;
+        width: 100%;
+        max-width: 580px;
+        aspect-ratio: 1/1;
+        margin: 0 auto;
+        background: #000;
+        border-radius: 6px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+      }
+      .gazer-frame iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        border: none;
+        display: block;
+        transform-origin: top left;
+      }
+      .ld {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 12px;
+        color: var(--dim);
+        font-size: 13px;
+        z-index: 5;
+        pointer-events: none;
+      }
+      .ld.off {
+        display: none;
+      }
+      .sp {
+        width: 28px;
+        height: 28px;
+        border: 3px solid var(--border);
+        border-top-color: var(--gold);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .ov {
+        position: absolute;
+        font-family: "JetBrains Mono", monospace;
+        background: rgba(0, 0, 0, 0.78);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 5px;
+        z-index: 10;
+        padding: 6px 10px;
+      }
+
+      .cr {
+        display: flex;
+        gap: 10px;
+        align-items: end;
+        flex-wrap: wrap;
+      }
+      .cg {
+        flex: 1;
+        min-width: 120px;
+      }
+      .cg label {
+        display: block;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 9px;
+        letter-spacing: 2px;
+        color: var(--dim);
+        text-transform: uppercase;
+        margin-bottom: 6px;
+      }
+      input[type="number"],
+      select {
+        width: 100%;
+        background: var(--panel);
+        color: var(--text);
+        border: 1px solid var(--border);
+        padding: 8px 10px;
+        border-radius: 6px;
+        font-family: "Outfit", sans-serif;
+        font-size: 12px;
+        appearance: none;
+        transition: border-color 0.2s;
+      }
+      input[type="number"]:hover,
+      select:hover {
+        border-color: var(--accent);
+      }
+      select {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%236e7094'%3E%3Cpath d='M5 7L0.5 2h9z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        cursor: pointer;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 7px;
+        font-family: "Outfit", sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .bp {
+        background: linear-gradient(135deg, var(--accent), #7b6be0);
+        color: #fff;
+        box-shadow: 0 3px 14px rgba(91, 75, 212, 0.25);
+      }
+      .bp:hover {
+        box-shadow: 0 4px 22px rgba(91, 75, 212, 0.4);
+        transform: translateY(-1px);
+      }
+      .bp:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        transform: none;
+      }
+      .bs {
+        background: var(--panel);
+        color: var(--text);
+        border: 1px solid var(--border);
+      }
+      .bs:hover {
+        border-color: var(--gold);
+      }
+      .br {
+        display: flex;
+        gap: 8px;
+        margin-top: 14px;
+        flex-wrap: wrap;
+      }
+
+      .pg {
+        display: none;
+        margin-top: 12px;
+      }
+      .pgb {
+        width: 100%;
+        height: 3px;
+        background: var(--panel);
+        border-radius: 2px;
+        overflow: hidden;
+      }
+      .pgf {
+        height: 100%;
+        background: linear-gradient(90deg, var(--gold), var(--glow));
+        width: 0%;
+        transition: width 0.3s;
+      }
+      .pgt {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px;
+        color: var(--dim);
+        margin-top: 5px;
+        text-align: center;
+      }
+
+      .res {
+        display: none;
+        text-align: center;
+        padding: 24px 18px;
+        border-radius: 10px;
+        border: 1px solid;
+        margin-top: 12px;
+      }
+      .res.ok {
+        background: linear-gradient(
+          135deg,
+          rgba(34, 221, 136, 0.06),
+          transparent
+        );
+        border-color: rgba(34, 221, 136, 0.25);
+      }
+      .res.mid {
+        background: linear-gradient(
+          135deg,
+          rgba(240, 192, 48, 0.06),
+          transparent
+        );
+        border-color: rgba(240, 192, 48, 0.25);
+      }
+      .res.bad {
+        background: linear-gradient(
+          135deg,
+          rgba(238, 68, 85, 0.06),
+          transparent
+        );
+        border-color: rgba(238, 68, 85, 0.25);
+      }
+      .rr {
+        font-size: 36px;
+        font-weight: 800;
+      }
+      .res.ok .rr {
+        color: var(--green);
+      }
+      .res.mid .rr {
+        color: var(--yellow);
+      }
+      .res.bad .rr {
+        color: var(--red);
+      }
+      .rf {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 50px;
+        font-weight: 700;
+        margin: 8px 0 2px;
+      }
+      .res.ok .rf {
+        color: var(--green);
+      }
+      .res.mid .rf {
+        color: var(--yellow);
+      }
+      .res.bad .rf {
+        color: var(--red);
+      }
+      .rl {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 9px;
+        letter-spacing: 3px;
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+      .rd {
+        font-size: 13px;
+        color: var(--dim);
+        max-width: 500px;
+        margin: 10px auto 0;
+        line-height: 1.5;
+      }
+
+      .dr {
+        display: flex;
+        justify-content: space-between;
+        padding: 9px 0;
+        border-bottom: 1px solid var(--border);
+        font-size: 12px;
+      }
+      .dr:last-child {
+        border: none;
+      }
+      .dl {
+        color: var(--dim);
+      }
+      .dv {
+        font-family: "JetBrains Mono", monospace;
+        font-weight: 500;
+      }
+
+      .fc {
+        width: 100%;
+        height: 100px;
+        margin-top: 10px;
+        position: relative;
+      }
+      .fc canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+        border-radius: 5px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+      }
+
+      .hw {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 8px;
+      }
+      .hi {
+        background: var(--panel);
+        border-radius: 6px;
+        padding: 10px;
+        border: 1px solid var(--border);
+      }
+      .hl {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 8px;
+        letter-spacing: 2px;
+        color: var(--muted);
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+      .hv {
+        font-size: 11px;
+        font-weight: 600;
+        word-break: break-word;
+        line-height: 1.3;
+      }
+
+      .rg {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .ri {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 12px;
+      }
+      .rq {
+        font-size: 10px;
+        color: var(--muted);
+        margin-bottom: 3px;
+      }
+      .ra {
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      /* Multi: preview grid shows scaled-down views of FULL-SIZE iframes */
+      .mgrid {
+        display: grid;
+        gap: 6px;
+        margin: 0 auto;
+        max-width: 580px;
+      }
+      .mcell {
+        position: relative;
+        overflow: hidden;
+        background: #000;
+        border-radius: 4px;
+        border: 1px solid var(--border);
+        aspect-ratio: 1/1;
+      }
+      .mcell iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        border: none;
+        display: block;
+        /* Full Gazer resolution — CSS transform shrinks the visual only */
+        transform-origin: top left;
+      }
+      .mcell .mlabel {
+        position: absolute;
+        bottom: 4px;
+        left: 4px;
+        z-index: 2;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 8px;
+        background: rgba(0, 0, 0, 0.7);
+        color: var(--dim);
+        padding: 2px 5px;
+        border-radius: 3px;
+      }
+
+      .section {
+        display: none;
+      }
+      .section.on {
+        display: block;
+      }
+      footer {
+        text-align: center;
+        padding: 32px 0 12px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px;
+        color: var(--muted);
+        letter-spacing: 1px;
+      }
+      footer a {
+        color: var(--gold);
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="logo">☾ Gazers.art</div>
+        <h1>Performance <em>Benchmark</em></h1>
+        <p class="sub">
+          Test your device against real Gazers rendering — by Matt Kane
+        </p>
+      </header>
+
+      <div class="tabs">
+        <button class="tab on" data-t="single">Single Gazer</button>
+        <button class="tab" data-t="multi">Multi-Gazer Stress</button>
+        <button class="tab" data-t="info">System Info</button>
+      </div>
+
+      <!-- ═══════════ SINGLE ═══════════ -->
+      <div class="section on" id="sec-single">
+        <div class="g">
+          <div class="c g1">
+            <div class="cl"><span class="d"></span> Live Gazer</div>
+            <div class="cr" style="margin-bottom: 12px">
+              <div class="cg">
+                <label>Gazer # (0–999)</label
+                ><input type="number" id="gNum" value="0" min="0" max="999" />
+              </div>
+              <div class="cg">
+                <label>Render Resolution</label>
+                <select id="gRes">
+                  <option value="1024">1K (1024×1024)</option>
+                  <option value="2048" selected>2K (2048×2048)</option>
+                  <option value="4096">4K (4096×4096)</option>
+                </select>
+              </div>
+              <div class="cg" style="flex: 0">
+                <label>&nbsp;</label
+                ><button class="btn bs" id="bLoad">Load</button>
+              </div>
+              <div class="cg" style="flex: 0">
+                <label>&nbsp;</label
+                ><button class="btn bs" id="bRand">Random</button>
+              </div>
+            </div>
+            <div class="gazer-frame" id="gWrap">
+              <div class="ld" id="gLd">
+                <div class="sp"></div>
+                <span>Loading Gazer #<span id="gLdN">0</span>…</span>
+              </div>
+              <iframe
+                id="gIframe"
+                sandbox="allow-scripts allow-same-origin"
+              ></iframe>
+              <div
+                class="ov"
+                style="
+                  top: 8px;
+                  left: 8px;
+                  display: flex;
+                  align-items: center;
+                  gap: 10px;
+                "
+              >
+                <div>
+                  <div
+                    id="oFps"
+                    style="
+                      font-size: 20px;
+                      font-weight: 700;
+                      min-width: 36px;
+                      color: var(--green);
+                    "
+                  >
+                    --
+                  </div>
+                  <div
+                    style="
+                      font-size: 8px;
+                      letter-spacing: 2px;
+                      color: var(--dim);
+                      text-transform: uppercase;
+                    "
+                  >
+                    FPS
+                  </div>
+                </div>
+                <div
+                  style="
+                    width: 1px;
+                    height: 22px;
+                    background: rgba(255, 255, 255, 0.08);
+                  "
+                ></div>
+                <div>
+                  <div id="oFt" style="font-size: 13px; color: var(--dim)">
+                    --
+                  </div>
+                  <div
+                    style="
+                      font-size: 8px;
+                      letter-spacing: 2px;
+                      color: var(--dim);
+                      text-transform: uppercase;
+                    "
+                  >
+                    ms/frame
+                  </div>
+                </div>
+              </div>
+              <div
+                class="ov"
+                style="top: 8px; right: 8px; font-size: 10px; color: var(--dim)"
+                id="oSt"
+              >
+                MONITORING
+              </div>
+              <div
+                class="ov"
+                style="
+                  bottom: 8px;
+                  left: 8px;
+                  font-size: 9px;
+                  color: var(--muted);
+                "
+                id="oInf"
+              >
+                Gazer #0
+              </div>
+            </div>
+            <div class="pg" id="sPg">
+              <div class="pgb"><div class="pgf" id="sPgF"></div></div>
+              <div class="pgt" id="sPgT">Starting…</div>
+            </div>
+            <div class="br">
+              <button class="btn bp" data-s="5" id="bB5">
+                <svg
+                  width="13"
+                  height="13"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  viewBox="0 0 24 24"
+                >
+                  <polygon points="5,3 19,12 5,21" />
+                </svg>
+                Benchmark 5s
+              </button>
+              <button class="btn bs" data-s="3">Quick 3s</button>
+              <button class="btn bs" data-s="10">Extended 10s</button>
+            </div>
+          </div>
+
+          <!-- RESULTS -->
+          <div class="c g1 res" id="sRes">
+            <div class="rr" id="sRR"></div>
+            <div
+              style="
+                display: flex;
+                justify-content: center;
+                gap: 40px;
+                margin: 12px 0;
+              "
+            >
+              <div>
+                <div class="rf" id="sRF"></div>
+                <div class="rl">Render Drop</div>
+              </div>
+              <div>
+                <div
+                  class="rf"
+                  id="sRF2"
+                  style="font-size: 32px; opacity: 0.6"
+                ></div>
+                <div class="rl">Avg Drop</div>
+              </div>
+              <div>
+                <div
+                  class="rf"
+                  id="sRF3"
+                  style="font-size: 32px; opacity: 0.6"
+                ></div>
+                <div class="rl">Drop Count</div>
+              </div>
+            </div>
+            <div class="rd" id="sRD"></div>
+          </div>
+
+          <!-- CHART -->
+          <div class="c g1" id="sCC" style="display: none">
+            <div class="cl">
+              <span class="d"></span> FPS Timeline — drops highlighted
+            </div>
+            <div class="fc" style="height: 120px">
+              <canvas id="sCv"></canvas>
+            </div>
+          </div>
+
+          <!-- STATS -->
+          <div class="c" id="sSC" style="display: none">
+            <div class="cl"><span class="d"></span> Drop Analysis</div>
+            <div class="dr">
+              <span class="dl">Baseline FPS</span
+              ><span class="dv" id="s_base">--</span>
+            </div>
+            <div class="dr">
+              <span class="dl">Worst Drop</span
+              ><span class="dv" id="s_worst">--</span>
+            </div>
+            <div class="dr">
+              <span class="dl">Avg Drop FPS</span
+              ><span class="dv" id="s_avgdrop">--</span>
+            </div>
+            <div class="dr">
+              <span class="dl">Drop Count</span
+              ><span class="dv" id="s_dcount">--</span>
+            </div>
+            <div class="dr">
+              <span class="dl">Avg Drop Duration</span
+              ><span class="dv" id="s_ddur">--</span>
+            </div>
+            <div class="dr">
+              <span class="dl">Time in Drops</span
+              ><span class="dv" id="s_dtime">--</span>
+            </div>
+            <div class="dr">
+              <span class="dl">Worst Drop Severity</span
+              ><span class="dv" id="s_sev">--</span>
+            </div>
+            <div class="dr">
+              <span class="dl">1% Low</span><span class="dv" id="s_p1">--</span>
+            </div>
+            <div class="dr">
+              <span class="dl">Frames Captured</span
+              ><span class="dv" id="s_fc">--</span>
+            </div>
+            <div class="dr">
+              <span class="dl">Gazer / Resolution</span
+              ><span class="dv" id="s_gz">--</span>
+            </div>
+          </div>
+
+          <!-- RECS -->
+          <div class="c" id="sRC" style="display: none">
+            <div class="cl"><span class="d"></span> Recommendations</div>
+            <div class="rg" id="sRG"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ MULTI ═══════════ -->
+      <div class="section" id="sec-multi">
+        <div class="g">
+          <div class="c g1">
+            <div class="cl">
+              <span class="d"></span> Multi-Gazer Stress Test
+            </div>
+            <p style="font-size: 12px; color: var(--dim); margin-bottom: 6px">
+              Each Gazer renders at the
+              <strong style="color: var(--text)">selected resolution</strong>
+              regardless of display size. The previews below are CSS-scaled —
+              the browser still renders every pixel. Choose 1K for quick tests,
+              2K for typical use, 4K for stress testing.
+            </p>
+            <p
+              style="font-size: 11px; color: var(--muted); margin-bottom: 12px"
+            >
+              Tip: the more Gazers, the harder the test. 8 simultaneous full-res
+              Gazers will challenge any machine.
+            </p>
+            <div class="cr" style="margin-bottom: 12px">
+              <div class="cg">
+                <label>Number of Gazers</label>
+                <select id="mCnt">
+                  <option value="2">2 Gazers</option>
+                  <option value="3">3 Gazers</option>
+                  <option value="4" selected>4 Gazers</option>
+                  <option value="6">6 Gazers</option>
+                  <option value="8">8 Gazers (extreme)</option>
+                </select>
+              </div>
+              <div class="cg">
+                <label>Render Resolution</label>
+                <select id="mRes">
+                  <option value="1024">1K (1024×1024)</option>
+                  <option value="2048" selected>2K (2048×2048)</option>
+                  <option value="4096">4K (4096×4096)</option>
+                </select>
+              </div>
+              <div class="cg" style="flex: 0">
+                <label>&nbsp;</label
+                ><button class="btn bp" id="bMulti">
+                  Load &amp; Benchmark
+                </button>
+              </div>
+            </div>
+            <div class="mgrid" id="mGrid"></div>
+            <div
+              style="
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 11px;
+                color: var(--dim);
+                margin-top: 10px;
+                text-align: center;
+              "
+              id="mInfo"
+            >
+              No Gazers loaded
+            </div>
+            <div class="pg" id="mPg">
+              <div class="pgb"><div class="pgf" id="mPgF"></div></div>
+              <div class="pgt" id="mPgT">--</div>
+            </div>
+
+            <div class="res" id="mResB">
+              <div class="rr" id="mRR"></div>
+              <div
+                style="
+                  display: flex;
+                  justify-content: center;
+                  gap: 40px;
+                  margin: 12px 0;
+                "
+              >
+                <div>
+                  <div class="rf" id="mRF"></div>
+                  <div class="rl">Render Drop</div>
+                </div>
+                <div>
+                  <div
+                    class="rf"
+                    id="mRF2"
+                    style="font-size: 32px; opacity: 0.6"
+                  ></div>
+                  <div class="rl">Avg Drop</div>
+                </div>
+                <div>
+                  <div
+                    class="rf"
+                    id="mRF3"
+                    style="font-size: 32px; opacity: 0.6"
+                  ></div>
+                  <div class="rl">Drop Count</div>
+                </div>
+              </div>
+              <div class="rd" id="mRD"></div>
+            </div>
+            <div class="c" id="mCC" style="display: none; margin-top: 12px">
+              <div class="cl">
+                <span class="d"></span> FPS Timeline — drops highlighted
+              </div>
+              <div class="fc" style="height: 120px">
+                <canvas id="mCv"></canvas>
+              </div>
+            </div>
+            <div class="c" id="mSC" style="display: none; margin-top: 12px">
+              <div class="cl"><span class="d"></span> Drop Analysis</div>
+              <div class="dr">
+                <span class="dl">Baseline FPS</span
+                ><span class="dv" id="m_base">--</span>
+              </div>
+              <div class="dr">
+                <span class="dl">Worst Drop</span
+                ><span class="dv" id="m_worst">--</span>
+              </div>
+              <div class="dr">
+                <span class="dl">Avg Drop FPS</span
+                ><span class="dv" id="m_avgdrop">--</span>
+              </div>
+              <div class="dr">
+                <span class="dl">Drop Count</span
+                ><span class="dv" id="m_dcount">--</span>
+              </div>
+              <div class="dr">
+                <span class="dl">Time in Drops</span
+                ><span class="dv" id="m_dtime">--</span>
+              </div>
+              <div class="dr">
+                <span class="dl">Gazers / Resolution</span
+                ><span class="dv" id="m_gz">--</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ INFO ═══════════ -->
+      <div class="section" id="sec-info">
+        <div class="g">
+          <div class="c g1">
+            <div class="cl"><span class="d"></span> Detected Hardware</div>
+            <div class="hw" id="hwG"></div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        Built for
+        <a href="https://gazers.art" target="_blank">Gazers.art</a> collectors —
+        Generative moon art by Matt Kane
+      </footer>
+    </div>
+
+    <script>
+      // ═══════════════════════════════════════
+      //  GAZERS BENCHMARK v3
+      // ═══════════════════════════════════════
+
+      const $ = (id) => document.getElementById(id);
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+      let hist = [],
+        benching = false,
+        lastT = 0,
+        fpc = 0,
+        fpa = 0;
+      let rollingFps = [],
+        dropFlash = 0;
+
+      // ── FPS loop (always running) ──
+      function tick(ts) {
+        requestAnimationFrame(tick);
+        const dt = ts - lastT;
+        lastT = ts;
+        if (dt <= 0 || dt > 500) return;
+        const fps = 1000 / dt;
+        fpa += fps;
+        fpc++;
+        if (benching) hist.push(fps);
+
+        // Rolling baseline (last 30 frames)
+        rollingFps.push(fps);
+        if (rollingFps.length > 30) rollingFps.shift();
+
+        if (fpc >= 6) {
+          const a = Math.round(fpa / fpc);
+          const median =
+            [...rollingFps].sort((a, b) => b - a)[
+              Math.floor(rollingFps.length * 0.3)
+            ] || 60;
+          const isDrop = fps < median * 0.7;
+
+          if (isDrop) dropFlash = 8; // flash for 8 ticks
+          if (dropFlash > 0) dropFlash--;
+
+          const el = $("oFps");
+          el.textContent = a;
+          if (dropFlash > 0) {
+            el.style.color = "var(--red)";
+            $("oSt").textContent = "RENDER DROP";
+            $("oSt").style.color = "var(--red)";
+          } else {
+            el.style.color =
+              a >= 55
+                ? "var(--green)"
+                : a >= 30
+                ? "var(--yellow)"
+                : "var(--red)";
+            if (!benching && $("oSt").textContent === "RENDER DROP") {
+              $("oSt").textContent = "MONITORING";
+              $("oSt").style.color = "var(--dim)";
+            }
+          }
+          $("oFt").textContent = (1000 / a).toFixed(1);
+          fpa = 0;
+          fpc = 0;
+        }
+      }
+      requestAnimationFrame(tick);
+
+      // ── Tabs ──
+      document.querySelectorAll(".tab").forEach((t) =>
+        t.addEventListener("click", () => {
+          document
+            .querySelectorAll(".section")
+            .forEach((s) => s.classList.remove("on"));
+          document
+            .querySelectorAll(".tab")
+            .forEach((b) => b.classList.remove("on"));
+          t.classList.add("on");
+          $("sec-" + t.dataset.t).classList.add("on");
+        }),
+      );
+
+      // ── Gazer URL ──
+      function gUrl(n) {
+        return `https://api.artblocks.io/generator/${
+          215000000 + (parseInt(n) || 0)
+        }`;
+      }
+
+      // ── Load single ──
+      function loadGazer() {
+        const n = parseInt($("gNum").value) || 0;
+        const res = parseInt($("gRes").value);
+        $("gLdN").textContent = n;
+        $("gLd").classList.remove("off");
+        const f = $("gIframe");
+        // Render at full selected resolution, scale down to fit container
+        const wrap = $("gWrap");
+        const displayW = wrap.clientWidth || 580;
+        const scale = displayW / res;
+        f.style.width = res + "px";
+        f.style.height = res + "px";
+        f.style.transform = `scale(${scale})`;
+        f.onload = () => $("gLd").classList.add("off");
+        f.src = gUrl(n);
+        $("oInf").textContent = `Gazer #${n} — ${res}×${res}`;
+      }
+      $("bLoad").addEventListener("click", loadGazer);
+      $("bRand").addEventListener("click", () => {
+        $("gNum").value = Math.floor(Math.random() * 1000);
+        loadGazer();
+      });
+      $("gRes").addEventListener("change", loadGazer);
+
+      // ── Single Benchmark ──
+      async function benchSingle(secs) {
+        document
+          .querySelectorAll(".br .btn")
+          .forEach((b) => (b.disabled = true));
+        ["sRes", "sCC", "sSC", "sRC"].forEach(
+          (id) => ($(id).style.display = "none"),
+        );
+
+        $("sPg").style.display = "block";
+        $("oSt").textContent = "WARMING UP";
+        $("oSt").style.color = "var(--gold)";
+        $("sPgT").textContent = "Warming up GPU…";
+        $("sPgF").style.width = "5%";
+        await sleep(1500);
+
+        $("oSt").textContent = "BENCHMARKING";
+        hist = [];
+        benching = true;
+        const dur = secs * 1000,
+          t0 = performance.now();
+        const anim = () => {
+          if (!benching) return;
+          const el = performance.now() - t0;
+          $("sPgF").style.width = Math.min(98, 5 + (el / dur) * 90) + "%";
+          $("sPgT").textContent = `${(el / 1000).toFixed(1)}s / ${secs}s — ${
+            hist.length
+          } frames`;
+          if (el < dur) requestAnimationFrame(anim);
+        };
+        requestAnimationFrame(anim);
+        await sleep(dur);
+        benching = false;
+
+        $("sPgF").style.width = "100%";
+        $("sPgT").textContent = "Analyzing…";
+        await sleep(300);
+        $("sPg").style.display = "none";
+        $("oSt").textContent = "COMPLETE";
+        $("oSt").style.color = "var(--green)";
+
+        showResults("s", hist, {
+          secs,
+          gazerNum: $("gNum").value,
+          res: parseInt($("gRes").value),
+        });
+        document
+          .querySelectorAll(".br .btn")
+          .forEach((b) => (b.disabled = false));
+      }
+
+      document.querySelectorAll(".br .btn").forEach((b) => {
+        const s = parseInt(b.dataset.s);
+        if (s) b.addEventListener("click", () => benchSingle(s));
+      });
+
+      // ── Multi Benchmark ──
+      async function benchMulti() {
+        const n = parseInt($("mCnt").value);
+        const res = parseInt($("mRes").value);
+        $("bMulti").disabled = true;
+        ["mResB", "mCC", "mSC"].forEach((id) => {
+          const e = $(id);
+          if (e) e.style.display = "none";
+        });
+
+        const grid = $("mGrid");
+        grid.innerHTML = "";
+        const cols = n <= 3 ? n : Math.ceil(Math.sqrt(n));
+        grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+        $(
+          "mInfo",
+        ).textContent = `Loading ${n} Gazers at ${res}×${res} resolution…`;
+
+        const nums = Array.from({ length: n }, () =>
+          Math.floor(Math.random() * 1000),
+        );
+        let loaded = 0;
+
+        for (const num of nums) {
+          const cell = document.createElement("div");
+          cell.className = "mcell";
+          const cellW = (580 - (cols - 1) * 6) / cols;
+          const scale = cellW / res;
+
+          const iframe = document.createElement("iframe");
+          iframe.sandbox = "allow-scripts allow-same-origin";
+          iframe.style.width = res + "px";
+          iframe.style.height = res + "px";
+          iframe.style.transform = `scale(${scale})`;
+          iframe.src = gUrl(num);
+          iframe.onload = () => {
+            loaded++;
+            $(
+              "mInfo",
+            ).textContent = `Loaded ${loaded}/${n} — each rendering at ${res}×${res}px`;
+          };
+
+          const lbl = document.createElement("div");
+          lbl.className = "mlabel";
+          lbl.textContent = "#" + num;
+
+          cell.appendChild(iframe);
+          cell.appendChild(lbl);
+          grid.appendChild(cell);
+        }
+
+        const deadline = Date.now() + 25000;
+        while (loaded < n && Date.now() < deadline) await sleep(300);
+
+        $(
+          "mInfo",
+        ).textContent = `${loaded}/${n} Gazers rendering at ${res}×${res} — benchmarking…`;
+
+        $("mPg").style.display = "block";
+        $("mPgT").textContent = "Warming up…";
+        $("mPgF").style.width = "5%";
+        await sleep(2000);
+
+        hist = [];
+        benching = true;
+        const dur = 5000,
+          t0 = performance.now();
+        const anim = () => {
+          if (!benching) return;
+          const el = performance.now() - t0;
+          $("mPgF").style.width = Math.min(98, 5 + (el / dur) * 90) + "%";
+          $("mPgT").textContent = `${(el / 1000).toFixed(
+            1,
+          )}s / 5s — ${n} Gazers @ ${res}px`;
+          if (el < dur) requestAnimationFrame(anim);
+        };
+        requestAnimationFrame(anim);
+        await sleep(dur);
+        benching = false;
+
+        $("mPgF").style.width = "100%";
+        $("mPgT").textContent = "Done";
+        await sleep(300);
+        $("mPg").style.display = "none";
+
+        $("mInfo").textContent = `Tested ${n} Gazers: #${nums.join(
+          ", #",
+        )} — each at ${res}×${res}px`;
+        showResults("m", hist, { secs: 5, count: n, nums, res });
+        $("bMulti").disabled = false;
+      }
+
+      $("bMulti").addEventListener("click", benchMulti);
+
+      // ═══════════════════════════════════════
+      //  DROP-BASED ANALYSIS
+      // ═══════════════════════════════════════
+
+      function analyzeDrops(fps) {
+        // 1. Establish baseline: median of top 60% of frames (the "idle" FPS between renders)
+        const sorted = [...fps].sort((a, b) => b - a);
+        const top60 = sorted.slice(0, Math.floor(sorted.length * 0.6));
+        const baseline = top60.reduce((a, b) => a + b) / top60.length;
+
+        // 2. Drop threshold: anything below 70% of baseline is a render event
+        const threshold = baseline * 0.7;
+
+        // 3. Find contiguous drop regions
+        const drops = [];
+        let inDrop = false,
+          dropStart = -1,
+          dropMin = Infinity;
+        for (let i = 0; i < fps.length; i++) {
+          if (fps[i] < threshold) {
+            if (!inDrop) {
+              inDrop = true;
+              dropStart = i;
+              dropMin = fps[i];
+            } else {
+              dropMin = Math.min(dropMin, fps[i]);
+            }
+          } else {
+            if (inDrop) {
+              drops.push({
+                start: dropStart,
+                end: i - 1,
+                len: i - dropStart,
+                min: dropMin,
+              });
+              inDrop = false;
+              dropMin = Infinity;
+            }
+          }
+        }
+        if (inDrop)
+          drops.push({
+            start: dropStart,
+            end: fps.length - 1,
+            len: fps.length - dropStart,
+            min: dropMin,
+          });
+
+        // 4. Compute stats
+        const worstDrop = drops.length
+          ? Math.min(...drops.map((d) => d.min))
+          : baseline;
+        const avgDropFps = drops.length
+          ? drops.reduce((s, d) => s + d.min, 0) / drops.length
+          : baseline;
+        const avgDropLen = drops.length
+          ? drops.reduce((s, d) => s + d.len, 0) / drops.length
+          : 0;
+        const totalDropFrames = drops.reduce((s, d) => s + d.len, 0);
+        const dropTimePct = (totalDropFrames / fps.length) * 100;
+        const worstSeverity =
+          baseline > 0 ? ((baseline - worstDrop) / baseline) * 100 : 0;
+        const p1 = sorted[Math.floor(sorted.length * 0.99)]; // 1% low from sorted desc
+
+        return {
+          baseline,
+          threshold,
+          drops,
+          worstDrop,
+          avgDropFps,
+          avgDropLen,
+          totalDropFrames,
+          dropTimePct,
+          worstSeverity,
+          p1,
+          sorted,
+        };
+      }
+
+      function showResults(p, fps, meta) {
+        if (fps.length < 10) {
+          alert("Too few frames captured. Is the Gazer loaded?");
+          return;
+        }
+
+        const a = analyzeDrops(fps);
+        const rr = meta.res;
+
+        // — Rating based on worst drop, not average —
+        let rating, cls, desc;
+        if (a.worstDrop >= 30) {
+          rating = "☾ SMOOTH";
+          cls = "ok";
+        } else if (a.worstDrop >= 15) {
+          rating = "◐ ACCEPTABLE";
+          cls = "mid";
+        } else {
+          rating = "● CHOPPY";
+          cls = "bad";
+        }
+
+        // Refine: if drops are very rare and brief, upgrade rating
+        if (cls === "mid" && a.drops.length <= 2 && a.avgDropLen <= 2) {
+          rating = "☾ MOSTLY SMOOTH";
+          cls = "ok";
+        }
+        // If tons of drops, downgrade
+        if (cls === "ok" && a.dropTimePct > 15) {
+          rating = "◐ FREQUENT DROPS";
+          cls = "mid";
+        }
+
+        if (p === "s") {
+          if (cls === "ok")
+            desc = `Gazer #${
+              meta.gazerNum
+            } at ${rr}×${rr}: render updates barely impact performance. Worst dip to ${Math.round(
+              a.worstDrop,
+            )} fps with ${
+              a.drops.length
+            } drops detected. Great for display use.`;
+          else if (cls === "mid")
+            desc = `Gazer #${
+              meta.gazerNum
+            } at ${rr}×${rr}: render updates cause noticeable dips to ${Math.round(
+              a.worstDrop,
+            )} fps (${
+              a.drops.length
+            } drops). Try lower resolution or enable HW acceleration.`;
+          else
+            desc = `Gazer #${
+              meta.gazerNum
+            } at ${rr}×${rr}: render updates cause heavy stutter — worst drop to ${Math.round(
+              a.worstDrop,
+            )} fps. Drop to ${
+              rr > 1024 ? "a lower resolution" : "a more powerful device"
+            }.`;
+        } else {
+          if (cls === "ok")
+            desc = `${
+              meta.count
+            } Gazers at ${rr}×${rr}: render drops stay above ${Math.round(
+              a.worstDrop,
+            )} fps. Solid for multi-display setups.`;
+          else if (cls === "mid")
+            desc = `${meta.count} Gazers at ${rr}×${rr}: drops to ${Math.round(
+              a.worstDrop,
+            )} fps during renders. Try fewer Gazers or lower resolution.`;
+          else
+            desc = `${
+              meta.count
+            } Gazers at ${rr}×${rr}: severe drops to ${Math.round(
+              a.worstDrop,
+            )} fps. Reduce count or resolution.`;
+        }
+
+        // — Banner —
+        const banner = p === "s" ? $("sRes") : $("mResB");
+        banner.style.display = "block";
+        banner.className = "c g1 res " + cls;
+        $(p + "RR").textContent = rating;
+        $(p + "RF").textContent = Math.round(a.worstDrop);
+        $(p + "RF2").textContent = Math.round(a.avgDropFps);
+        $(p + "RF3").textContent = a.drops.length;
+        $(p + "RD").textContent = desc;
+
+        // — Chart —
+        $(p + "CC").style.display = "";
+        drawChart(p + "Cv", fps, a);
+
+        // — Stats —
+        $(p + "SC").style.display = "";
+        const col = (v) =>
+          v >= 30 ? "var(--green)" : v >= 15 ? "var(--yellow)" : "var(--red)";
+        const set = (id, t, c) => {
+          const e = $(id);
+          if (!e) return;
+          e.textContent = t;
+          if (c) e.style.color = c;
+        };
+
+        set(p + "_base", Math.round(a.baseline) + " fps", "var(--green)");
+        set(p + "_worst", Math.round(a.worstDrop) + " fps", col(a.worstDrop));
+        set(
+          p + "_avgdrop",
+          Math.round(a.avgDropFps) + " fps",
+          col(a.avgDropFps),
+        );
+        set(
+          p + "_dcount",
+          a.drops.length +
+            (a.drops.length === 0 ? " — no drops!" : " render events"),
+          a.drops.length > 5 ? "var(--yellow)" : "var(--green)",
+        );
+        set(
+          p + "_dtime",
+          a.dropTimePct.toFixed(1) + "% of test",
+          a.dropTimePct > 20
+            ? "var(--red)"
+            : a.dropTimePct > 10
+            ? "var(--yellow)"
+            : "var(--green)",
+        );
+
+        if (p === "s") {
+          set(
+            "s_ddur",
+            a.avgDropLen > 0 ? a.avgDropLen.toFixed(1) + " frames avg" : "n/a",
+          );
+          set(
+            "s_sev",
+            Math.round(a.worstSeverity) + "% below baseline",
+            a.worstSeverity > 70
+              ? "var(--red)"
+              : a.worstSeverity > 40
+              ? "var(--yellow)"
+              : "var(--green)",
+          );
+          set("s_p1", Math.round(a.p1) + " fps", col(a.p1));
+          set("s_fc", String(fps.length));
+          set("s_gz", `#${meta.gazerNum} @ ${rr}×${rr}`);
+        } else {
+          set("m_gz", `${meta.count} Gazers @ ${rr}×${rr}`);
+        }
+
+        // — Recs —
+        if (p === "s") showRecs(a, meta.res);
+      }
+
+      // ── Chart with drop highlighting ──
+      function drawChart(id, fps, analysis) {
+        const c = $(id);
+        const r = c.parentElement.getBoundingClientRect();
+        c.width = r.width * 2;
+        c.height = r.height * 2;
+        const ctx = c.getContext("2d");
+        ctx.scale(2, 2);
+        const w = r.width,
+          h = r.height;
+        ctx.clearRect(0, 0, w, h);
+
+        let data = fps;
+        if (fps.length > w) {
+          const step = fps.length / w;
+          data = [];
+          for (let i = 0; i < w; i++) data.push(fps[Math.floor(i * step)]);
+        }
+        const mx = Math.min(120, Math.max(...data) * 1.15);
+        const ratio = data.length / fps.length; // for mapping drop regions
+
+        // Grid lines
+        [60, 30, 15].forEach((v) => {
+          if (v > mx) return;
+          const y = h - (v / mx) * h;
+          ctx.strokeStyle = "rgba(255,255,255,.05)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(w, y);
+          ctx.stroke();
+          ctx.fillStyle = "rgba(255,255,255,.18)";
+          ctx.font = "9px JetBrains Mono";
+          ctx.fillText(v + "fps", 4, y - 3);
+        });
+
+        // Highlight drop zones in red
+        for (const drop of analysis.drops) {
+          const x1 = (drop.start / fps.length) * w;
+          const x2 = ((drop.end + 1) / fps.length) * w;
+          ctx.fillStyle = "rgba(238,68,85,.12)";
+          ctx.fillRect(x1, 0, Math.max(x2 - x1, 2), h);
+        }
+
+        // Threshold line
+        const thY = h - (analysis.threshold / mx) * h;
+        ctx.strokeStyle = "rgba(238,68,85,.35)";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(0, thY);
+        ctx.lineTo(w, thY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = "rgba(238,68,85,.5)";
+        ctx.font = "8px JetBrains Mono";
+        ctx.fillText("drop threshold", w - 72, thY - 3);
+
+        // Baseline line
+        const blY = h - (analysis.baseline / mx) * h;
+        ctx.strokeStyle = "rgba(34,221,136,.3)";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(0, blY);
+        ctx.lineTo(w, blY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = "rgba(34,221,136,.5)";
+        ctx.font = "8px JetBrains Mono";
+        ctx.fillText("baseline", w - 42, blY + 10);
+
+        // FPS line — color changes during drops
+        for (let i = 1; i < data.length; i++) {
+          const origIdx = Math.floor(i / ratio);
+          const inDrop = data[i] < analysis.threshold;
+          ctx.beginPath();
+          ctx.strokeStyle = inDrop
+            ? "rgba(238,68,85,.9)"
+            : "rgba(201,168,76,.9)";
+          ctx.lineWidth = inDrop ? 2 : 1.5;
+          const px = ((i - 1) / data.length) * w,
+            py = h - (Math.min(data[i - 1], mx) / mx) * h;
+          const cx = (i / data.length) * w,
+            cy = h - (Math.min(data[i], mx) / mx) * h;
+          ctx.moveTo(px, py);
+          ctx.lineTo(cx, cy);
+          ctx.stroke();
+        }
+
+        // Fill under
+        ctx.beginPath();
+        ctx.moveTo(0, h - (Math.min(data[0], mx) / mx) * h);
+        for (let i = 1; i < data.length; i++) {
+          ctx.lineTo(
+            (i / data.length) * w,
+            h - (Math.min(data[i], mx) / mx) * h,
+          );
+        }
+        ctx.lineTo(w, h);
+        ctx.lineTo(0, h);
+        ctx.closePath();
+        const gd = ctx.createLinearGradient(0, 0, 0, h);
+        gd.addColorStop(0, "rgba(201,168,76,.08)");
+        gd.addColorStop(1, "rgba(201,168,76,.01)");
+        ctx.fillStyle = gd;
+        ctx.fill();
+      }
+
+      // ── Recs based on drop analysis ──
+      function showRecs(a, res) {
+        $("sRC").style.display = "";
+        const g = $("sRG");
+        g.innerHTML = "";
+        const R = [];
+
+        // Main verdict
+        if (a.worstDrop >= 30)
+          R.push({
+            q: "Render smoothness?",
+            a: "Drops stay above 30fps — smooth",
+            c: "var(--green)",
+          });
+        else if (a.worstDrop >= 15)
+          R.push({
+            q: "Render smoothness?",
+            a: `Drops to ${Math.round(a.worstDrop)}fps — noticeable`,
+            c: "var(--yellow)",
+          });
+        else
+          R.push({
+            q: "Render smoothness?",
+            a: `Drops to ${Math.round(a.worstDrop)}fps — stuttery`,
+            c: "var(--red)",
+          });
+
+        // Resolution advice based on drop severity
+        if (a.worstDrop >= 30 && res <= 2048)
+          R.push({
+            q: "Resolution headroom?",
+            a: "Try higher res — you have room",
+            c: "var(--green)",
+          });
+        else if (a.worstDrop >= 30 && res >= 4096)
+          R.push({
+            q: "Resolution headroom?",
+            a: "4K smooth — maxed out",
+            c: "var(--green)",
+          });
+        else if (a.worstDrop >= 15)
+          R.push({
+            q: "Resolution headroom?",
+            a: "At limit for this resolution",
+            c: "var(--yellow)",
+          });
+        else
+          R.push({
+            q: "Resolution headroom?",
+            a: `Drop to ${
+              res > 1024
+                ? res > 2048
+                  ? "2K or 1K"
+                  : "1K"
+                : "lower-power Gazer"
+            }`,
+            c: "var(--red)",
+          });
+
+        // Multi-gazer estimate based on drop overhead
+        const dropOverhead = a.baseline - a.worstDrop;
+        const headroom = a.worstDrop;
+        const maxSim =
+          headroom >= 45
+            ? "4–8"
+            : headroom >= 30
+            ? "2–4"
+            : headroom >= 15
+            ? "1–2"
+            : "1 max";
+        R.push({
+          q: `Simultaneous @ ${res}px?`,
+          a: maxSim,
+          c: headroom >= 30 ? "var(--cyan)" : "var(--yellow)",
+        });
+
+        // Drop frequency
+        if (a.drops.length === 0)
+          R.push({
+            q: "Drop frequency?",
+            a: "None detected — excellent",
+            c: "var(--green)",
+          });
+        else if (a.dropTimePct < 5)
+          R.push({
+            q: "Drop frequency?",
+            a: "Rare — barely noticeable",
+            c: "var(--green)",
+          });
+        else if (a.dropTimePct < 15)
+          R.push({
+            q: "Drop frequency?",
+            a: "Moderate — visible during renders",
+            c: "var(--yellow)",
+          });
+        else
+          R.push({
+            q: "Drop frequency?",
+            a: "Frequent — constant stutter",
+            c: "var(--red)",
+          });
+
+        R.push({
+          q: "Best browser?",
+          a: "Chrome/Edge + HW accel",
+          c: "var(--glow)",
+        });
+
+        // Vernis readiness based on drops
+        if (a.worstDrop >= 25)
+          R.push({
+            q: "Vernis display ready?",
+            a: "Yes — drops are manageable",
+            c: "var(--green)",
+          });
+        else if (a.worstDrop >= 12)
+          R.push({
+            q: "Vernis display ready?",
+            a: "Marginal — test at target res",
+            c: "var(--yellow)",
+          });
+        else
+          R.push({
+            q: "Vernis display ready?",
+            a: "Underpowered for this res",
+            c: "var(--red)",
+          });
+
+        R.forEach((x) => {
+          const el = document.createElement("div");
+          el.className = "ri";
+          el.innerHTML = `<div class="rq">${x.q}</div><div class="ra" style="color:${x.c}">${x.a}</div>`;
+          g.appendChild(el);
+        });
+      }
+
+      // ── Hardware ──
+      function detectHW() {
+        const g = $("hwG"),
+          I = [];
+        const tc = document.createElement("canvas");
+        const gl = tc.getContext("webgl2") || tc.getContext("webgl");
+        let gpu = "Unknown";
+        if (gl) {
+          const d = gl.getExtension("WEBGL_debug_renderer_info");
+          if (d) gpu = gl.getParameter(d.UNMASKED_RENDERER_WEBGL);
+        }
+        I.push({ l: "GPU", v: gpu.length > 50 ? gpu.slice(0, 50) + "…" : gpu });
+        I.push({ l: "CPU Threads", v: navigator.hardwareConcurrency || "?" });
+        I.push({
+          l: "RAM",
+          v: navigator.deviceMemory ? navigator.deviceMemory + " GB" : "?",
+        });
+        I.push({ l: "Screen", v: screen.width + "×" + screen.height });
+        I.push({ l: "Pixel Ratio", v: devicePixelRatio.toFixed(1) + "x" });
+        I.push({
+          l: "WebGL",
+          v: tc.getContext("webgl2")
+            ? "2.0"
+            : tc.getContext("webgl")
+            ? "1.0"
+            : "None",
+        });
+        I.push({ l: "Platform", v: navigator.platform || "?" });
+        I.push({
+          l: "Browser",
+          v: /Chrome/.test(navigator.userAgent)
+            ? "Chrome-based"
+            : /Firefox/.test(navigator.userAgent)
+            ? "Firefox"
+            : /Safari/.test(navigator.userAgent)
+            ? "Safari"
+            : "Other",
+        });
+        if (/swiftshader|llvmpipe|software/i.test(gpu))
+          I.push({ l: "⚠ WARNING", v: "Software rendering — no GPU!" });
+        g.innerHTML = I.map(
+          (i) =>
+            `<div class="hi"><div class="hl">${i.l}</div><div class="hv">${i.v}</div></div>`,
+        ).join("");
+      }
+
+      // ── Init ──
+      window.addEventListener("DOMContentLoaded", () => {
+        detectHW();
+        loadGazer();
+      });
+    </script>
+  </body>
+</html>
